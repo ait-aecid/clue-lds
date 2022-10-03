@@ -34,7 +34,7 @@ total_lines = 50522931
 with open('clue.json') as f:
     for line in f:
         cnt += 1
-        if cnt % (total_lines / 20) == 0:
+        if int(cnt % (total_lines / 20)) == 0:
             print(str(int(cnt*100/total_lines)) + '%', end=' ', flush=True)
         j = json.loads(line)
         uid = j['uid']
