@@ -124,7 +124,7 @@ write_every = 1000000 # Write file in batches for performance
 buf_cnt = 0
 out_string = ""
 cnt = 0
-total_lines = 50000000
+total_lines = 50522931
 with open('clue.json') as f, open('clue_anomaly.json', 'w+') as out, open('labels.txt', 'w+') as labels:
     for line in f:
         cnt += 1

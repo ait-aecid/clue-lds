@@ -28,7 +28,7 @@ w_events /= w_sum
 
 users = {}
 cnt = 0
-total_lines = 50000000
+total_lines = 50522931
 
 # Go through all lines and retrieve information on executed events for each user
 with open('clue.json') as f:

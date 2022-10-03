@@ -54,7 +54,7 @@ dists = {}
 debug = {}
 idf = {}
 only_anomalous_users = False # Skip normal users that are not in the ground truth (mainly for debugging/testing)
-total_lines = 50000000
+total_lines = 50522931
 with open('clue_anomaly.json') as f:
     for line in f:
         cnt += 1
