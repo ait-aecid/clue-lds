@@ -54,6 +54,7 @@ dists = {}
 debug = {}
 idf = {}
 only_anomalous_users = False # Skip normal users that are not in the ground truth (mainly for debugging/testing)
+resort_vectors = False # When true matching vectors are moved to the front of the queue to keep them from being deleted
 total_lines = 50522931
 with open('clue_anomaly.json') as f:
     for line in f:
@@ -165,14 +166,18 @@ with open('clue_anomaly.json') as f:
                     detected_dist[sample].append("normal")
                     # Reduce days left for re-training
                     wait_days[uid] -= 1
+                    if resort_vectors is True and min_known is not None:
+                        # Move matching min_known vector to end of list to save it from aging out
+                        dists[uid].remove(min_known)
+                        dists[uid].append(min_known)
                 if update is True or wait_days[uid] >= 0:
                     # Add new count vector to model when model is updated also for normal data or currently re-training
                     dists[uid].append(freq_day[uid])
-                if queue != -1 and len(dists[uid]) >= queue:
+                if queue != -1 and len(dists[uid]) > queue:
                     # Remove oldest count vector from queue in model
                     dists[uid] = dists[uid][1:]
                 if debug_out is True:
-                    debug[uid].append((datetime.datetime(last_active_day[uid].year, last_active_day[uid].month, last_active_day[uid].day, 0, 0, 0, 0, pytz.UTC), min_dist, min_limit, detected_dist[sample], min_known, freq_day[uid]))
+                    debug[uid].append((datetime.datetime(last_active_day[uid].year, last_active_day[uid].month, last_active_day[uid].day, 0, 0, 0, 0, pytz.UTC), min_dist, min_limit, detected_dist[sample], min_known, freq_day[uid], dists[uid]))
                 last_active_day[uid] = currentday
                 freq_day[uid] = {}
             if action in freq_day[uid]:
@@ -196,8 +201,10 @@ if debug_out is True:
                         out.write(str(elem[0]) + ': ' + str(elem[1] * elem[2]) + '/' + str(elem[2]) + ' #' + str(round(elem[1], 2)) + string + ' ' + str(elem[3]) + '\n')
                     if uid in anomalous_users and abs(anomalous_users[uid].timestamp() - elem[0].timestamp()) < 60*60*24*60 and elem[4] is not None and elem[5] is not None:
                         # Also print count vectors for days close to switching anomalous users
-                        out.write(str(dict(sorted(elem[4].items()))) + '\n')
-                        out.write(str(dict(sorted(elem[5].items()))) + '\n')
+                        for model_vec in elem[6]:
+                            out.write('Model vec.: ' + str(dict(sorted(model_vec.items()))) + '\n')
+                        out.write('Best match: ' + str(dict(sorted(elem[4].items()))) + '\n')
+                        out.write('Count vec.: ' + str(dict(sorted(elem[5].items()))) + '\n')
 
 def get_eval_results(d):
     # Initialize metrics
@@ -206,6 +213,7 @@ def get_eval_results(d):
     fp = 0
     tn = 0
     fn = 0
+    fn_adjusted = 0
     tp_user = {}
     tp_adjusted_user = {}
     fn_user = {}
@@ -235,12 +243,14 @@ def get_eval_results(d):
                 tp_adjusted_user[uid] += 1
             elif detected == ["detection", "normal"] or detected == ["training", "normal"]:
                 # Missed anomalous user (classified as normal) either during training or detection phase
-                fn += 1
+                fn_adjusted += 1
                 fn_user[uid] += 1
+                fn += 1
             elif detected == ["training", "anomalous"]:
                 # Correct detection during training phase counted by adjusted score
                 tp_adjusted += 1
                 tp_adjusted_user[uid] += 1
+                fn += 1
         else:
             # Note that instances are omitted in the training phase
             if detected == ["detection", "anomalous"]:
@@ -253,17 +263,27 @@ def get_eval_results(d):
     print('  Total = ' + str(tp + tn + fp + fn))
     print('  Train = ' + str(sum_training))
     print('  Detect = ' + str(sum_detection))
+    users_detected = []
+    users_undetected = []
+    for uid in anomalous_users:
+        if tp_adjusted_user[uid] == 1 and fn_user[uid] == 0:
+            users_detected.append(uid)
+        elif tp_adjusted_user[uid] == 0 and fn_user[uid] == 1:
+            users_undetected.append(uid)
+        else:
+            print('Eval Error: ' + str(uid) + ' -> TP = ' + str(tp_adjusted_user[uid]) + ' and FN = ' + str(fn_user[uid]))
+    print('  Detected users = ' + str(users_detected))
+    print('  Missed users = ' + str(users_undetected))
     print('  TP_adj = ' + str(tp_adjusted))
     print('  TP = ' + str(tp))
-    for uid in anomalous_users:
-        print(' - ' + str(uid) + ': TP_adj = ' + str(tp_adjusted_user[uid]) + ', FN = ' + str(fn_user[uid]))
     print('  FP = ' + str(fp))
     print('  TN = ' + str(tn))
+    print('  FN_adj = ' + str(fn_adjusted))
     print('  FN = ' + str(fn))
     tpr_adjusted = "NaN"
     if tp_adjusted + fn > 0:
-        tpr_adjusted = tp_adjusted / (tp_adjusted + fn)
-    print('  TPR_adj = ' + str(tpr_adjusted))
+        tpr_adjusted = tp_adjusted / (tp_adjusted + fn_adjusted)
+    print('  TPR_adj = Rec_adj = ' + str(tpr_adjusted))
     tpr = "NaN"
     if tp + fn > 0:
         tpr = tp / (tp + fn)
@@ -281,16 +301,16 @@ def get_eval_results(d):
         prec = tp_adjusted / (tp_adjusted + fp)
     print('  Prec = ' + str(prec))
     fone = "NaN"
-    if tp_adjusted + 0.5 * (fp + fn) > 0:
-        fone = tp_adjusted / (tp_adjusted + 0.5 * (fp + fn))
+    if tp_adjusted + 0.5 * (fp + fn_adjusted) > 0:
+        fone = tp_adjusted / (tp_adjusted + 0.5 * (fp + fn_adjusted))
     print('  F1 = ' + str(fone))
     acc = "NaN"
-    if tp_adjusted + tn + fp + fn > 0:
-        acc = (tp_adjusted + tn) / (tp_adjusted + tn + fp + fn)
+    if tp_adjusted + tn + fp + fn_adjusted > 0:
+        acc = (tp_adjusted + tn) / (tp_adjusted + tn + fp + fn_adjusted)
     print('  ACC = ' + str(acc))
     print('  R = ' + str(sum_training / (sum_training + sum_detection)))
-    print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc')
-    print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc))
+    print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn_adj,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc')
+    print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn_adjusted) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc))
     print('')
 
 sum_total_days = 0
