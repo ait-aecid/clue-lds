@@ -9,9 +9,10 @@ import argparse
 threshold = 0.7
 anom_free_days = 1
 mode = 1
-queue = 10 # Default value for unlimited queue
+queue = 10 # -1 for unlimited
 update = False
 debug_out = False
+resort_vectors = False # When true matching vectors are moved to the front of the queue to keep them from being deleted
 
 argparser = argparse.ArgumentParser(description='Detection.')
 argparser.add_argument('-t','--thresh', help='Similarity threshold.', required=False)
@@ -19,6 +20,7 @@ argparser.add_argument('-r','--retrain', help='Retrain length (days).', required
 argparser.add_argument('-m','--mode', help='1 .. default, 2 .. idf, 3 .. norm', required=False)
 argparser.add_argument('-q','--queue', help='Queue size (-1 for unlimited).', required=False)
 argparser.add_argument('-u','--update', help='Update model also during detection.', required=False, action='store_true')
+argparser.add_argument('-s','--sort', help='Move matching vectors to front of queue.', required=False, action='store_true')
 argparser.add_argument('-d','--debug', help='Output debug information.', required=False, action='store_true')
 
 args = vars(argparser.parse_args())
@@ -32,6 +34,7 @@ if args["queue"] is not None:
     queue = int(args["queue"])
 update = args["update"]
 debug_out = args["debug"]
+resort_vectors = args["sort"]
 
 # Read in ground truth (switched uid and corresponding timestamps)
 anomalous_users = {}
@@ -54,7 +57,6 @@ dists = {}
 debug = {}
 idf = {}
 only_anomalous_users = False # Skip normal users that are not in the ground truth (mainly for debugging/testing)
-resort_vectors = False # When true matching vectors are moved to the front of the queue to keep them from being deleted
 total_lines = 50522931
 with open('clue_anomaly.json') as f:
     for line in f:
