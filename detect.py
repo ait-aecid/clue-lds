@@ -5,6 +5,7 @@ import pytz
 import math
 import sys
 import argparse
+import time
 
 threshold = 0.7
 anom_free_days = 1
@@ -12,7 +13,7 @@ mode = 1
 queue = 10 # -1 for unlimited
 update = False
 debug_out = False
-resort_vectors = False # When true matching vectors are moved to the front of the queue to keep them from being deleted
+fifo = False # When false matching vectors are moved to the front of the queue to keep them from being deleted
 
 argparser = argparse.ArgumentParser(description='Detection.')
 argparser.add_argument('-t','--thresh', help='Similarity threshold.', required=False)
@@ -20,7 +21,7 @@ argparser.add_argument('-r','--retrain', help='Retrain length (days).', required
 argparser.add_argument('-m','--mode', help='1 .. default, 2 .. idf, 3 .. norm', required=False)
 argparser.add_argument('-q','--queue', help='Queue size (-1 for unlimited).', required=False)
 argparser.add_argument('-u','--update', help='Update model also during detection.', required=False, action='store_true')
-argparser.add_argument('-s','--sort', help='Move matching vectors to front of queue.', required=False, action='store_true')
+argparser.add_argument('-f','--fifo', help='Do not move matching vectors to front of queue.', required=False, action='store_true')
 argparser.add_argument('-d','--debug', help='Output debug information.', required=False, action='store_true')
 
 args = vars(argparser.parse_args())
@@ -34,7 +35,7 @@ if args["queue"] is not None:
     queue = int(args["queue"])
 update = args["update"]
 debug_out = args["debug"]
-resort_vectors = args["sort"]
+fifo = args["fifo"]
 
 # Read in ground truth (switched uid and corresponding timestamps)
 anomalous_users = {}
@@ -58,6 +59,7 @@ debug = {}
 idf = {}
 only_anomalous_users = False # Skip normal users that are not in the ground truth (mainly for debugging/testing)
 total_lines = 50522931
+start_time = time.time()
 with open('clue_anomaly.json') as f:
     for line in f:
         cnt += 1
@@ -168,7 +170,7 @@ with open('clue_anomaly.json') as f:
                     detected_dist[sample].append("normal")
                     # Reduce days left for re-training
                     wait_days[uid] -= 1
-                    if resort_vectors is True and min_known is not None:
+                    if fifo is False and min_known is not None:
                         # Move matching min_known vector to end of list to save it from aging out
                         dists[uid].remove(min_known)
                         dists[uid].append(min_known)
@@ -311,8 +313,10 @@ def get_eval_results(d):
         acc = (tp_adjusted + tn) / (tp_adjusted + tn + fp + fn_adjusted)
     print('  ACC = ' + str(acc))
     print('  R = ' + str(sum_training / (sum_training + sum_detection)))
-    print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn_adj,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc')
-    print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn_adjusted) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc))
+    runtime = time.time()-start_time
+    print('  Runtime = ' + str(runtime))
+    print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn_adj,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc,time')
+    print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn_adjusted) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc) + ',' + str(runtime))
     print('')
 
 sum_total_days = 0
