@@ -7,10 +7,10 @@ import sys
 import argparse
 import time
 
-threshold = 0.7
+threshold = 0.6
 anom_free_days = 1
 mode = 1
-queue = 10 # -1 for unlimited
+queue = 30 # -1 for unlimited
 update = False
 debug_out = False
 fifo = False # When false matching vectors are moved to the front of the queue to keep them from being deleted
