@@ -8,7 +8,8 @@ As the CLUE-LDS only contains normal user and entity behavior, it is necessary t
 ```bash
 user@ubuntu:~$ git clone https://github.com/ait-aecid/clue-lds.git
 user@ubuntu:~$ cd clue-lds/
-user@ubuntu:~/clue-lds$ mv ~/Downloads/clue.json .
+user@ubuntu:~/clue-lds$ wget https://zenodo.org/record/7119953/files/clue.zip
+user@ubuntu:~/clue-lds$ unzip clue.zip
 ```
 
 The next step is to compute similarities between pairs of users so that behavior patterns of users that are selected for switching are not too similar (which would make detection very difficult) and not too different (which would make detection trivial). Running the following script generates a similarity matrix ``sim.txt`` as well as the file ``user_info.txt`` containing user information that is necessary for the subsequent steps.
