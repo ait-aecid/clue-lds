@@ -23,12 +23,12 @@ The next step is to generate the log data set with injected anomalies. The follo
 
 ```bash
 user@ubuntu:~/clue-lds$ python3 generate_test_file.py
-Changing user pair with similarity 0.22:
- * User shocked-jade-roadrunner-pressoperator changed at 2020-07-20 00:00:00+00:00 (user originally carried out 3065 total events and 10 unique events during 65 active days).
- * User shared-fuchsia-cardinal-buildingadvisor changed at 2020-07-20 00:00:00+00:00 (user originally carried out 6186937 total events and 24 unique events during 1836 active days).
-Changing user pair with similarity 0.48:
- * User married-copper-leech-motorengineer changed at 2022-06-13 00:00:00+00:00 (user originally carried out 5713 total events and 13 unique events during 165 active days).
- * User new-coffee-herring-aircraftdesigner changed at 2022-07-04 00:00:00+00:00 (user originally carried out 8506 total events and 8 unique events during 108 active days).
+Changing user pair with similarity 0.24:
+ * User competent-aqua-hare-buildinginspector changed at 2022-09-28 00:00:00+00:00 (user originally carried out 1521 total events and 16 unique events during 59 active days).
+ * User shared-fuchsia-cardinal-buildingadvisor changed at 2022-09-28 00:00:00+00:00 (user originally carried out 6356739 total events and 24 unique events during 1910 active days).
+Changing user pair with similarity 0.15:
+ * User dull-amethyst-buzzard-ledgerclerk changed at 2018-06-10 00:00:00+00:00 (user originally carried out 5328776 total events and 5 unique events during 291 active days).
+ * User japanese-yellow-pike-thermalengineer changed at 2018-06-11 00:00:00+00:00 (user originally carried out 96841 total events and 23 unique events during 669 active days).
 ...
  ```
 
@@ -36,23 +36,34 @@ This repository contains an exemplary anomaly detection method based on event co
 
 ```bash
 user@ubuntu:~/clue-lds$ python3 detect.py -t 0.6
+Ground truth:
+ * shared-fuchsia-cardinal-buildingadvisor switched at 2022-09-28 00:00:00+00:00
+ * competent-aqua-hare-buildinginspector switched at 2022-09-28 00:00:00+00:00
+ * japanese-yellow-pike-thermalengineer switched at 2018-06-10 00:00:00+00:00
+ * dull-amethyst-buzzard-ledgerclerk switched at 2018-06-11 00:00:00+00:00
+...
+ 5389 users with 83147 days considered, including days spent on training and incomplete days.
 Results with threshold = 0.6:
-  Total = 9392
-  Train = 757
-  Detect = 9392
-  TP_adj = 11
-  TP = 11
-  FP = 587
-  TN = 8785
-  FN = 9
-  TPR_adj = 0.55
-  TPR = Rec = 0.55
-  FPR = 0.0626333760136577
-  TNR = 0.9373666239863423
-  Prec = 0.01839464882943144
-  F1 = 0.03559870550161812
-  ACC = 0.936541737649063
-  R = 0.0745886294216179
+  Total = 72469
+  Train = 5289
+  Detect = 72469
+  Detected users = ['shared-fuchsia-cardinal-buildingadvisor', 'competent-aqua-hare-buildinginspector', 'japanese-yellow-pike-thermalengineer', 'dull-amethyst-buzzard-ledgerclerk', 'graceful-olive-spoonbill-careersofficer', 'high-chocolate-emu-liftengineer', 'careful-coffee-fowl-trafficwarden', 'southern-brown-gerbil-medicalsecretary', 'ethnic-lavender-gerbil-gamingclubmanager', 'modern-coral-crocodile-lampshademaker', 'extraordinary-plum-clownfish-sawmiller', 'hurt-aqua-roundworm-fuelmerchant', 'proud-copper-marmoset-accountsclerk']
+  Missed users = ['chosen-bronze-egret-ticketagent', 'apparent-apricot-lamprey-artexer', 'horrible-moccasin-mole-licensing', 'famous-lavender-sailfish-partitionerector', 'meaningful-blue-viper-tankerdriver', 'labour-crimson-donkey-golfcaddy', 'ambitious-gold-bonobo-repairman']
+  TP_adj = 13
+  TP = 13
+  FP = 3337
+  TN = 69112
+  FN_adj = 7
+  FN = 7
+  TPR_adj = Rec_adj = 0.65
+  TPR = Rec = 0.65
+  FPR = 0.04605998702535577
+  TNR = 0.9539400129746443
+  Prec = 0.003880597014925373
+  F1 = 0.00771513353115727
+  ACC = 0.9538561315872994
+  R = 0.06801872476143933
+  Runtime = 655.9123327732086
 ```
 
 If you use the CLUE data set or any of the scripts provided in this repository, please cite the following publication:
