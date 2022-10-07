@@ -315,8 +315,9 @@ def get_eval_results(d):
     print('  R = ' + str(sum_training / (sum_training + sum_detection)))
     runtime = time.time()-start_time
     print('  Runtime = ' + str(runtime))
-    print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn_adj,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc,time')
-    print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn_adjusted) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc) + ',' + str(runtime))
+    # The following output is used to create a CSV of results
+    #print('thresh,retrain,mode,queue,update,total,train,detect,tp_adj,tp,fp,tn,fn_adj,fn,tpr_adj,tpr,fpr,tnr,p,f1,acc,time')
+    #print(str(threshold) + ',' + str(anom_free_days) + ',' + str(mode) + ',' + str(queue) + ',' + str(update) + ',' + str(tp + tn + fp + fn) + ',' + str(sum_training) + ',' + str(sum_detection) + ',' + str(tp_adjusted) + ',' + str(tp) + ',' + str(fp) + ',' + str(tn) + ',' + str(fn_adjusted) + ',' + str(fn) + ',' + str(tpr_adjusted) + ',' + str(tpr) + ',' + str(fpr) + ',' + str(tnr) + ',' + str(prec) + ',' + str(fone) + ',' + str(acc) + ',' + str(runtime))
     print('')
 
 sum_total_days = 0
