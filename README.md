@@ -68,4 +68,4 @@ Results with threshold = 0.6:
 ```
 
 If you use the CLUE data set or any of the scripts provided in this repository, please cite the following publication:
- * Landauer M., Skopik F., Höld G., Wurzenberger M. (2022): A User and Entity Behavior Analytics Log Data Set for Anomaly Detection in Cloud Computing. Under Review.
+ * Landauer M., Skopik F., Höld G., Wurzenberger M. (2022): [A User and Entity Behavior Analytics Log Data Set for Anomaly Detection in Cloud Computing.](https://doi.org/10.1109/BigData55660.2022.10020672) 2022 IEEE International Conference on Big Data - 6th International Workshop on Big Data Analytics for Cyber Intelligence and Defense (BDA4CID 2022), December 17-20, 2022, Osaka, Japan. IEEE. \[[PDF](https://www.skopik.at/ait/2022_bigdata.pdf)\]
